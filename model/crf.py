@@ -352,10 +352,17 @@ class CRFDecode_vb():
         return:
             decoded sequence (size seq_len, bat_size)
         """
+        # print("tagset_size is {}\n".format(self.tagset_size))
+        # print("start_tag is {}\n".format(self.start_tag))
+        # print("end_tag is {}\n".format(self.end_tag))
+        # print("average_batch is {}\n".format(self.average_batch))
+
         # calculate batch size and seq len
 
         seq_len = scores.size(0)
         bat_size = scores.size(1)
+        # print("seq_len is {}".format(seq_len))
+        # print("bat_size is {}".format(bat_size))
 
         mask = 1 - mask
         decode_idx = torch.LongTensor(seq_len-1, bat_size)
@@ -363,9 +370,12 @@ class CRFDecode_vb():
         # calculate forward score and checkpoint
 
         # build iter
+        # print("scores shape is {}".format(scores.shape))
+        # print("mask shape is {}".format(mask.shape))
         seq_iter = enumerate(scores)
         # the first score should start with <start>
         _, inivalues = seq_iter.__next__()  # bat_size * from_target_size * to_target_size
+        # print("inivalues size is {}".format(inivalues.shape))
         # only need start from start_tag
         forscores = inivalues[:, self.start_tag, :]  # bat_size * to_target_size
         back_points = list()
@@ -381,8 +391,14 @@ class CRFDecode_vb():
             back_points.append(cur_bp)
 
         pointer = back_points[-1][:, self.end_tag]
+        # print("pointer shape is {}".format(pointer.shape))
+        # print(pointer)
+
         decode_idx[-1] = pointer
+        # print("back_points shape is {}".format(back_points[0].shape))
+        # print("decode_idx shape is {}".format(decode_idx.shape))
+
         for idx in range(len(back_points)-2, -1, -1):
-            pointer = torch.gather(back_points[idx], 1, pointer.contiguous().view(bat_size, 1))
+            pointer = torch.gather(back_points[idx], 1, pointer.contiguous().view(bat_size, 1)).reshape(-1)
             decode_idx[idx] = pointer
         return decode_idx

@@ -63,7 +63,8 @@ def switch(vec1, vec2, mask):
     return:
         vec (*)
     """
-    catvec = torch.cat([vec1.view(-1, 1), vec2.view(-1, 1)], dim=1)
+    # catvec = torch.cat([vec1.view(-1, 1), vec2.view(-1, 1)], dim=1)
+    catvec = torch.cat([vec1.reshape(-1, 1), vec2.reshape(-1, 1)], dim=1)
     switched_vec = torch.gather(catvec, 1, mask.long().view(-1, 1))
     return switched_vec.view(-1)
 
